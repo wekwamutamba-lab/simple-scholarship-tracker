@@ -1,4 +1,5 @@
 const prisma = require('../db');
+const { checkDeadlineStatus } = require('../utils/deadlineReminder');
 
 const createScholarship = async (req, res) => {
   try {
@@ -15,8 +16,8 @@ const createScholarship = async (req, res) => {
         requirements: requirements || [],
         notes,
         status: status || 'SAVED',
-        deadline: new Date(deadline),
-        userId: req.user.userId, // Links scholarship to the logged-in user
+        deadline: deadline ? new Date(deadline) : null,
+        userId: req.user.userId,
       },
     });
 
@@ -26,7 +27,6 @@ const createScholarship = async (req, res) => {
   }
 };
 
-
 const getScholarships = async (req, res) => {
   try {
     const scholarships = await prisma.scholarship.findMany({
@@ -34,12 +34,17 @@ const getScholarships = async (req, res) => {
       orderBy: { deadline: 'asc' }, 
     });
 
-    res.json(scholarships);
+    // Dynamically calculate deadline warnings for each record
+    const formattedScholarships = scholarships.map((scholarship) => ({
+      ...scholarship,
+      deadlineInfo: scholarship.deadline ? checkDeadlineStatus(scholarship.deadline) : null,
+    }));
+
+    res.json(formattedScholarships);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching scholarships', error: error.message });
   }
 };
-
 
 const getScholarshipById = async (req, res) => {
   try {
@@ -56,18 +61,19 @@ const getScholarshipById = async (req, res) => {
       return res.status(404).json({ message: 'Scholarship not found' });
     }
 
-    res.json(scholarship);
+    res.json({
+      ...scholarship,
+      deadlineInfo: scholarship.deadline ? checkDeadlineStatus(scholarship.deadline) : null,
+    });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching scholarship', error: error.message });
   }
 };
 
-
 const updateScholarship = async (req, res) => {
   try {
     const { id } = req.params;
     const { title, provider, amount, source, platformName, platformUrl, requirements, notes, status, deadline } = req.body;
-
 
     const existing = await prisma.scholarship.findFirst({
       where: { id: parseInt(id), userId: req.user.userId },
@@ -99,12 +105,10 @@ const updateScholarship = async (req, res) => {
   }
 };
 
-
 const deleteScholarship = async (req, res) => {
   try {
     const { id } = req.params;
 
-    
     const existing = await prisma.scholarship.findFirst({
       where: { id: parseInt(id), userId: req.user.userId },
     });

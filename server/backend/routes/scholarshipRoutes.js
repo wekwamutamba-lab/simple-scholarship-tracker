@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authenticateToken = require('../middleware/authmiddleware');
+
 const {
   createScholarship,
   getScholarships,
@@ -8,7 +9,6 @@ const {
   updateScholarship,
   deleteScholarship,
 } = require('../controller/scholarshipController');
-
 
 router.use(authenticateToken);
 
