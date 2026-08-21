@@ -1,21 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const authenticateToken = require('../middleware/authmiddleware');
+const scholarshipController = require('../controller/scholarshipController');
+const authenticateToken = require('../middleware/authMiddleware'); // Check this export/import
 
-const {
-  createScholarship,
-  getScholarships,
-  getScholarshipById,
-  updateScholarship,
-  deleteScholarship,
-} = require('../controller/scholarshipController');
 
-router.use(authenticateToken);
-
-router.post('/', createScholarship);
-router.get('/', getScholarships);
-router.get('/:id', getScholarshipById);
-router.put('/:id', updateScholarship);
-router.delete('/:id', deleteScholarship);
+router.get('/', authenticateToken, scholarshipController.getScholarships);
+router.post('/', authenticateToken, scholarshipController.createScholarship);
+router.delete('/:id', authenticateToken, scholarshipController.deleteScholarship);
 
 module.exports = router;
