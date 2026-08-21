@@ -5,50 +5,59 @@ import { AuthContext } from '../../context/AuthContext';
 function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const res = await loginUser({ email, password });
       login(res.data.user, res.data.token);
-      alert('Logged in successfully!');
     } catch (err) {
-      alert('Login failed!');
+      alert('Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md border border-gray-100 max-w-sm w-full">
-      <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">Login</h2>
+    <div className="w-full">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <label className="block text-xs font-medium text-black mb-1">
+            Email Address
+          </label>
           <input 
             type="email" 
-            placeholder="you@example.com" 
+            placeholder="name@domain.com" 
             value={email} 
             onChange={(e) => setEmail(e.target.value)} 
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-xs bg-white border border-black rounded-xl outline-none focus:ring-1 focus:ring-black placeholder-neutral-400"
             required
           />
         </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <label className="block text-xs font-medium text-black mb-1">
+            Password
+          </label>
           <input 
             type="password" 
             placeholder="••••••••" 
             value={password} 
             onChange={(e) => setPassword(e.target.value)} 
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 text-xs bg-white border border-black rounded-xl outline-none focus:ring-1 focus:ring-black placeholder-neutral-400"
             required
           />
         </div>
+
         <button 
           type="submit" 
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-150"
+          disabled={loading}
+          className="w-full bg-black hover:bg-neutral-800 text-white font-medium py-2.5 px-4 rounded-xl text-xs transition duration-150 disabled:opacity-50 mt-2"
         >
-          Sign In
+          {loading ? 'Signing in...' : 'Sign In'}
         </button>
       </form>
     </div>

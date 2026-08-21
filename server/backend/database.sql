@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS "Scholarship" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     
-    -- Foreign Key Constraint linking Scholarship to User
+    
     CONSTRAINT "Scholarship_userId_fkey" 
         FOREIGN KEY ("userId") 
         REFERENCES "User"("id") 
