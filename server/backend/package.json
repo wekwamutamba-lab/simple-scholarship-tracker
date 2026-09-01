@@ -4,9 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "npx prisma generate",
     "start": "node index.js",
     "server": "nodemon index.js"
   },
+
   "keywords": [],
   "author": "",
   "license": "ISC",
