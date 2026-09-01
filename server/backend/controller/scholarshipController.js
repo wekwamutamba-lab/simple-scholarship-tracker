@@ -8,39 +8,56 @@ exports.getScholarships = async (req, res) => {
     });
     res.json(scholarships);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Get scholarships error:', error);
+    res.status(500).json({ message: error.message || 'Failed to fetch scholarships' });
   }
 };
 
 exports.createScholarship = async (req, res) => {
-  const { title, amount, provider, url, deadline, status, documents } = req.body;
+  const { title, amount, provider, url, deadline, status, documents, eligibility, notes } = req.body;
+
+  if (!title || !title.trim()) {
+    return res.status(400).json({ message: 'Scholarship title is required' });
+  }
+
   try {
+    const numericAmount = isNaN(Number(amount)) ? 0 : Number(amount);
     const newScholarship = await prisma.scholarship.create({
       data: {
-        title,
-        amount: Number(amount),
-        provider,
-        url,
-        deadline,
-        status: status || 'Pending',
-        documents,
+        title: title.trim(),
+        amount: numericAmount,
+        provider: provider ? provider.trim() : null,
+        url: url ? url.trim() : null,
+        deadline: deadline ? deadline.trim() : null,
+        status: status || 'Not started',
+        documents: documents || eligibility || notes || null,
         userId: req.user.id,
       },
     });
     res.status(201).json(newScholarship);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Create scholarship error:', error);
+    res.status(500).json({ message: error.message || 'Failed to create scholarship' });
   }
 };
 
 exports.deleteScholarship = async (req, res) => {
   const { id } = req.params;
   try {
-    await prisma.scholarship.delete({
-      where: { id: Number(id) },
+    const deleted = await prisma.scholarship.deleteMany({
+      where: {
+        id: Number(id),
+        userId: req.user.id,
+      },
     });
+
+    if (deleted.count === 0) {
+      return res.status(404).json({ message: 'Scholarship not found or unauthorized' });
+    }
+
     res.json({ message: 'Scholarship deleted successfully' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Delete scholarship error:', error);
+    res.status(500).json({ message: error.message || 'Failed to delete scholarship' });
   }
-};
+};

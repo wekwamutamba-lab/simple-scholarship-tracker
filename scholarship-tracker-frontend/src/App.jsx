@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useCallback } from 'react';
 import { AuthContext } from './context/AuthContext';
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
@@ -22,22 +22,28 @@ export default function App() {
     notes: ''
   });
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
       const res = await fetchScholarships();
       setScholarships(res.data || []);
-    } catch (err) {
-      console.error('Failed to load scholarships:', err);
+    } catch (error) {
+      console.error('Failed to load scholarships:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
-    loadData();
-  }, [token]);
+    if (!token) return;
+
+    const timeoutId = setTimeout(() => {
+      void loadData();
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
+  }, [token, loadData]);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -53,7 +59,8 @@ export default function App() {
         status: 'Not started', eligibility: '', notes: ''
       });
       loadData();
-    } catch (err) {
+    } catch (error) {
+      console.error('Error saving entry:', error);
       alert('Error saving entry');
     }
   };
@@ -63,7 +70,8 @@ export default function App() {
     try {
       await deleteScholarship(id);
       setScholarships((prev) => prev.filter((item) => item.id !== id));
-    } catch (err) {
+    } catch (error) {
+      console.error('Failed to delete item:', error);
       alert('Failed to delete item.');
     }
   };
@@ -107,12 +115,17 @@ export default function App() {
           </div>
 
           <div className="pt-2">
-            {isRegistering ? <RegisterForm /> : <LoginForm />}
+            {isRegistering ? (
+              <RegisterForm onSwitchToLogin={() => setIsRegistering(false)} />
+            ) : (
+              <LoginForm />
+            )}
           </div>
         </div>
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen bg-[#F7F6F2] text-[#2C302E] font-sans antialiased">
@@ -280,12 +293,13 @@ export default function App() {
                       {item.provider && <span>{item.provider} • </span>}
                       {item.amount && <strong className="text-[#2D3A2F]">${item.amount}</strong>}
                     </p>
-                    {item.eligibility && (
+                    {(item.eligibility || item.documents) && (
                       <p className="text-xs text-[#525754] bg-[#F9F8F5] p-2 rounded-lg mt-2 border border-[#E5E2DA]">
-                        {item.eligibility}
+                        {item.eligibility || item.documents}
                       </p>
                     )}
                   </div>
+
 
                   <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0 border-[#E5E2DA]">
                     {item.deadline && (
